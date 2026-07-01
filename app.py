@@ -8,7 +8,8 @@ from io import StringIO
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFacePipeline
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 # Page config
@@ -29,16 +30,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==================== CONFIGURATION ====================
-MODEL = "gpt-3.5-turbo"
-EMBEDDING_MODEL = "text-embedding-3-small"
+MODEL = "mistralai/Mistral-7B-Instruct-v0.1"  # Free HuggingFace model
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # Free HuggingFace embeddings
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 MAX_TOKENS_DISPLAY = 4000
-
-# ==================== VALIDATION ====================
-if not os.getenv("OPENAI_API_KEY"):
-    st.error("❌ **OPENAI_API_KEY** not configured. Please set your API key as an environment variable.")
-    st.stop()
 
 # ==================== SESSION STATE INITIALIZATION ====================
 if "vectorstore" not in st.session_state:
@@ -138,8 +134,8 @@ if uploaded_file:
                 )
                 chunks = text_splitter.split_documents(documents)
 
-                # Create embeddings
-                embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+                # Create embeddings using HuggingFace (FREE!)
+                embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
                 st.session_state.vectorstore = FAISS.from_documents(chunks, embeddings)
                 st.session_state.file_name = uploaded_file.name
                 st.session_state.chat_history = []  # Reset chat history for new file
@@ -233,19 +229,18 @@ User Question: {query}
 
 Answer:"""
 
-            # Generate response with streaming
-            llm = ChatOpenAI(model=MODEL, temperature=temperature, streaming=True)
+            # Generate response using HuggingFace (FREE!)
+            with st.spinner("⏳ Generating response..."):
+                llm = HuggingFacePipeline(
+                    model_name=MODEL,
+                    model_kwargs={"temperature": temperature, "max_length": 512}
+                )
+                
+                # Get response
+                full_response = llm(prompt)
             
             with st.chat_message("assistant"):
-                response_placeholder = st.empty()
-                full_response = ""
-                
-                # Stream the response
-                for chunk in llm.stream(prompt):
-                    full_response += chunk.content
-                    response_placeholder.markdown(full_response + "▌")
-                
-                response_placeholder.markdown(full_response)
+                st.markdown(full_response)
 
             # Calculate tokens
             query_tokens = count_tokens(query)
