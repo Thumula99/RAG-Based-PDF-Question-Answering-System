@@ -1,3 +1,15 @@
+---
+title: RAG-Based PDF Question-Answering System
+emoji: 📚
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: "1.28.0"
+python_version: "3.10"
+app_file: app.py
+pinned: false
+---
+
 # 📚 RAG-Based PDF Question-Answering System
 
 A powerful Retrieval-Augmented Generation (RAG) application with an intuitive web UI that allows users to upload PDFs and ask questions using advanced LLM capabilities with semantic vector search.
@@ -96,9 +108,9 @@ http://localhost:8501
 
 #### Session Statistics
 - Sidebar shows real-time statistics:
-  - Total questions asked
-  - Approximate total tokens used
-  - Helps track API usage and costs
+   - Total questions asked
+   - Approximate total tokens used
+   - Helps track API usage and costs
 
 ## 🏗️ Architecture
 
